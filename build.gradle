@@ -1,0 +1,67 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+    id 'eclipse'
+    id 'idea'
+    id "com.github.hierynomus.license" version "0.13.1"
+}
+
+apply plugin: 'java'
+    
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+group = 'org.lanterpowered'
+version = '1.0.0'
+archivesBaseName = project.name.toLowerCase()
+
+repositories {
+	mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+    compile 'org.apache.logging.log4j:log4j-core:2.5'
+    compile 'org.ow2.asm:asm-all:5.0.3'
+}
+
+jar.manifest.attributes(
+        'Created-By': "${System.properties['java.version']} (${System.properties['java.vm.vendor']})",
+        'Implementation-Title': project.name,
+        'Implementation-Version': project.version,
+        'Implementation-Vendor': project.organization
+)
+
+license {
+    header project.file('HEADER.txt')
+    sourceSets = project.sourceSets
+    include '**/*.java'
+    include '**/*.groovy'
+
+    strictCheck true
+    ignoreFailures = false
+
+    ext {
+        name = project.name
+        url = project.url
+        organization = project.organization
+    }
+
+    mapping {
+        java = 'SLASHSTAR_STYLE'
+    }
+}
+
+// Gradle version used for generating the Gradle wrapper
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.13'
+}
