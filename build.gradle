@@ -12,6 +12,8 @@ plugins {
     id "com.github.hierynomus.license" version "0.13.1"
 }
 
+defaultTasks 'clean', 'licenseFormat', 'build'
+
 apply plugin: 'java'
     
 sourceCompatibility = '1.8'
