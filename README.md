@@ -1,0 +1,1 @@
+# LanternServer [![Build Status](https://travis-ci.org/LanternPowered/LanternGradle.svg?branch=master)](https://travis-ci.org/LanternPowered/LanternGradle)
