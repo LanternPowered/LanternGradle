@@ -36,7 +36,7 @@ apply plugin: 'java'
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
-group = 'org.lanterpowered'
+group = 'org.lanternpowered'
 version = '1.0.0-SNAPSHOT'
 archivesBaseName = project.name.toLowerCase()
 
