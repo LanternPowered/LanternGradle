@@ -24,22 +24,42 @@
  */
 package org.lanternpowered.gradle.runconfigs
 
-import groovy.transform.ToString
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
+import org.gradle.api.tasks.TaskAction
 
-@ToString(includePackage = false, includeNames = true, ignoreNulls = true)
-class RunConfigurationExtension {
+import java.nio.file.Files
+import java.nio.file.Paths
 
-    final Project project
-    final NamedDomainObjectContainer<RunConfiguration> configs
+abstract class GenIDERunConfigsTaskBase extends GenRunConfigsTaskBase {
 
-    RunConfigurationExtension(Project project) {
-        this.project = project
-        this.configs = project.container(RunConfiguration, { name -> return new RunConfiguration() })
+    protected final NamedDomainObjectContainer<RunConfiguration> configs;
+
+    GenIDERunConfigsTaskBase(String baseName) {
+        configs = project.container(RunConfiguration, { name -> return new RunConfiguration() })
+
+        def createWorkingDirsTask = project.task("create${baseName}WorkingDirsTask") {
+            configs.collect().each {
+                def config = it as RunConfiguration;
+                if (config.workingDirectory != null) {
+                    def path = Paths.get(config.workingDirectory as String);
+                    if (!Files.exists(path)) {
+                        Files.createDirectories(path);
+                    }
+                }
+            }
+        }
+
+        dependsOn createWorkingDirsTask
     }
 
     void configs(Closure closure) {
-        project.configure(this.configs, closure)
+        project.configure(configs, closure)
     }
+
+    @TaskAction
+    void doTask() {
+        doTask0()
+    }
+
+    abstract void doTask0();
 }

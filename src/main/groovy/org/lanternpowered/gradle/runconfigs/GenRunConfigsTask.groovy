@@ -24,30 +24,18 @@
  */
 package org.lanternpowered.gradle.runconfigs
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+class GenRunConfigsTask extends GenRunConfigsTaskBase {
 
-class RunConfigurationPlugin implements Plugin<Project> {
-
-    @Override
-    void apply(Project project) {
-        def mainTask = project.tasks.create('runConfigurations', GenRunConfigsTask.class) {
-            group = 'Lantern'
-            description = 'Generates run configurations for IntelliJ and Eclipse.'
-        }
-        if (project.plugins.hasPlugin('idea')) {
-            def ideaTask = project.tasks.create('ideaRunConfigurations', GenIntelliJRunConfigsTask.class) {
-                group = 'Lantern'
-                description = 'Generates run configurations for IntelliJ.'
+    GenRunConfigsTask() {
+        project.afterEvaluate {
+            // Find all the tasks this global task depends on and add
+            // the config files to the other ones
+            dependsOn.findAll { it instanceof GenEclipseRunConfigsTask }.each {
+                (it as GenEclipseRunConfigsTask).configs.addAll(configs)
             }
-            mainTask.dependsOn ideaTask
-        }
-        if (project.plugins.hasPlugin('eclipse')) {
-            def eclipseTask = project.tasks.create('eclipseRunConfigurations', GenEclipseRunConfigsTask.class) {
-                group = 'Lantern'
-                description = 'Generates run configurations for Eclipse.'
+            dependsOn.findAll { it instanceof GenIntelliJRunConfigsTask }.each {
+                (it as GenIntelliJRunConfigsTask).configs.addAll(configs)
             }
-            mainTask.dependsOn eclipseTask
         }
     }
 }

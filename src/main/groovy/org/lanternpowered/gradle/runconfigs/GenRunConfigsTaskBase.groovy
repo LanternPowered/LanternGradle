@@ -24,30 +24,18 @@
  */
 package org.lanternpowered.gradle.runconfigs
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+import org.gradle.api.DefaultTask
+import org.gradle.api.NamedDomainObjectContainer
 
-class RunConfigurationPlugin implements Plugin<Project> {
+abstract class GenRunConfigsTaskBase extends DefaultTask {
 
-    @Override
-    void apply(Project project) {
-        def mainTask = project.tasks.create('runConfigurations', GenRunConfigsTask.class) {
-            group = 'Lantern'
-            description = 'Generates run configurations for IntelliJ and Eclipse.'
-        }
-        if (project.plugins.hasPlugin('idea')) {
-            def ideaTask = project.tasks.create('ideaRunConfigurations', GenIntelliJRunConfigsTask.class) {
-                group = 'Lantern'
-                description = 'Generates run configurations for IntelliJ.'
-            }
-            mainTask.dependsOn ideaTask
-        }
-        if (project.plugins.hasPlugin('eclipse')) {
-            def eclipseTask = project.tasks.create('eclipseRunConfigurations', GenEclipseRunConfigsTask.class) {
-                group = 'Lantern'
-                description = 'Generates run configurations for Eclipse.'
-            }
-            mainTask.dependsOn eclipseTask
-        }
+    protected final NamedDomainObjectContainer<RunConfiguration> configs;
+
+    GenRunConfigsTaskBase() {
+        configs = project.container(RunConfiguration, { name -> return new RunConfiguration() })
+    }
+
+    void configs(Closure closure) {
+        project.configure(configs, closure)
     }
 }
