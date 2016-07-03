@@ -31,45 +31,49 @@ import org.lanternpowered.gradle.LanternGradle
 @ToString(includePackage = false, includeNames = true, ignoreNulls = true)
 class RunConfiguration {
 
-    Object name;
+    String name
 
-    Object mainClass;
-
-    @Nullable
-    Object vmOptions;
+    Object mainClass
 
     @Nullable
-    Object programArguments;
+    Object vmOptions
 
     @Nullable
-    Object workingDirectory;
+    Object programArguments
 
-    Map<String, String> environmentVariables = new HashMap<>();
+    @Nullable
+    Object workingDirectory
+
+    Map<String, String> environmentVariables = new HashMap<>()
+
+    public RunConfiguration(String name) {
+        this.name = name;
+    }
 
     public Map<String, String> getEnvironmentVariables() {
         return this.environmentVariables;
     }
 
     public String getName() {
-        return LanternGradle.resolve(this.name);
+        return this.name;
     }
 
     public String getMainClass() {
-        return LanternGradle.resolve(this.mainClass);
+        return LanternGradle.resolve(this.mainClass)
     }
 
     @Nullable
     public String getVmOptions() {
-        return LanternGradle.resolve(this.vmOptions);
+        return LanternGradle.resolve(this.vmOptions)
     }
 
     @Nullable
     public String getProgramArguments() {
-        return LanternGradle.resolve(this.programArguments);
+        return LanternGradle.resolve(this.programArguments)
     }
 
     @Nullable
     public String getWorkingDirectory() {
-        return LanternGradle.resolve(this.workingDirectory);
+        return LanternGradle.resolve(this.workingDirectory)
     }
 }

@@ -24,12 +24,23 @@
  */
 package org.lanternpowered.gradle.runconfigs
 
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.plugins.ide.eclipse.model.EclipseModel
 
 public class GenEclipseRunConfigsTask extends GenIDERunConfigsTaskBase {
 
     GenEclipseRunConfigsTask() {
         super("Eclipse")
+    }
+
+    @Override
+    List<RunConfiguration> getConfigs() {
+        List<RunConfiguration> configurations = []
+        configurations.addAll((project.extensions.getByName(RunConfigurationPlugin.EXTENSION_BASE_NAME)
+                as NamedDomainObjectContainer).asMap.values())
+        configurations.addAll((project.extensions.getByName(RunConfigurationPlugin.EXTENSION_ECLIPSE_NAME)
+                as NamedDomainObjectContainer).asMap.values())
+        return configurations
     }
 
     @Override

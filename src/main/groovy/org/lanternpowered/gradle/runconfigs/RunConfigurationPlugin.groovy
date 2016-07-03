@@ -24,30 +24,43 @@
  */
 package org.lanternpowered.gradle.runconfigs
 
+import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 class RunConfigurationPlugin implements Plugin<Project> {
 
+    static final String EXTENSION_BASE_NAME = 'runConfigurations'
+    static final String EXTENSION_IDEA_NAME = 'ideaRunConfigurations'
+    static final String EXTENSION_ECLIPSE_NAME = 'eclipseRunConfigurations'
+
     @Override
     void apply(Project project) {
-        def mainTask = project.tasks.create('runConfigurations', GenRunConfigsTask.class) {
-            group = 'Lantern'
-            description = 'Generates run configurations for IntelliJ and Eclipse.'
-        }
-        if (project.plugins.hasPlugin('idea')) {
-            def ideaTask = project.tasks.create('ideaRunConfigurations', GenIntelliJRunConfigsTask.class) {
+        project.with {
+            def factory = { name -> return new RunConfiguration(name) }
+            extensions.add(EXTENSION_BASE_NAME, project.container(RunConfiguration, factory))
+            extensions.add(EXTENSION_IDEA_NAME, project.container(RunConfiguration, factory))
+            extensions.add(EXTENSION_ECLIPSE_NAME, project.container(RunConfiguration, factory))
+
+            def mainTask = project.tasks.create('genRunConfigurations', DefaultTask.class) {
                 group = 'Lantern'
-                description = 'Generates run configurations for IntelliJ.'
+                description = 'Generates run configurations for IntelliJ and Eclipse.'
             }
-            mainTask.dependsOn ideaTask
-        }
-        if (project.plugins.hasPlugin('eclipse')) {
-            def eclipseTask = project.tasks.create('eclipseRunConfigurations', GenEclipseRunConfigsTask.class) {
-                group = 'Lantern'
-                description = 'Generates run configurations for Eclipse.'
+
+            if (project.plugins.hasPlugin('idea')) {
+                def ideaTask = project.tasks.create('genIdeaRunConfigurations', GenIntelliJRunConfigsTask.class) {
+                    group = 'Lantern'
+                    description = 'Generates run configurations for IntelliJ.'
+                }
+                mainTask.dependsOn ideaTask
             }
-            mainTask.dependsOn eclipseTask
+            if (project.plugins.hasPlugin('eclipse')) {
+                def eclipseTask = project.tasks.create('genEclipseRunConfigurations', GenEclipseRunConfigsTask.class) {
+                    group = 'Lantern'
+                    description = 'Generates run configurations for Eclipse.'
+                }
+                mainTask.dependsOn eclipseTask
+            }
         }
     }
 }
