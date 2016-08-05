@@ -46,7 +46,7 @@ class Log4jPluginCacheFileTransformer implements Transformer {
 
     @Override
     boolean canTransformResource(FileTreeElement element) {
-        return PLUGIN_CACHE_FILE.equals(element.relativePath.pathString)
+        return PLUGIN_CACHE_FILE == element.relativePath.pathString
     }
 
     @Override

@@ -38,7 +38,6 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
     private boolean shouldExecute = true;
 
     GenIntelliJRunConfigsTask() {
-        super("Idea")
         project.gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
             if (graph.hasTask('idea') || graph.hasTask('ideaWorkspace')) {
                 this.shouldExecute = false;
@@ -63,7 +62,7 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
     }
 
     @Override
-    void doTask0() {
+    void doTask0(List<RunConfiguration> configs) {
         def flag = false;
 
         // Apply to configurations first to the project files
@@ -84,15 +83,15 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
 
             // Search for .iws file
             if (!workspaceFile.exists()) {
-                def parent = new File()
-                def files = parent.listFiles { parent.equals(it.parentFile) && it.name.endsWith(".iws") }
+                def parent = new File('')
+                def files = parent.listFiles { parent == it.parentFile && it.name.endsWith(".iws") }
                 if (files.length != 0) {
                     workspaceFile = files[0]
                 }
             }
 
             if (workspaceFile.exists()) {
-                applyToFile(workspaceFile)
+                applyToFile(configs, workspaceFile)
                 flag = true;
             }
         }
@@ -102,7 +101,7 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
 
         def workspaceFile = new File(".idea/workspace.xml")
         if (workspaceFile.exists()) {
-            applyToFile(workspaceFile)
+            applyToFile(configs, workspaceFile)
             flag = true;
         }
 
@@ -111,11 +110,11 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
         }
     }
 
-    private void applyToFile(File file) {
+    private void applyToFile(List<RunConfiguration> configs, File file) {
         def xmlParser = new XmlParser()
         def node = xmlParser.parse(file)
 
-        this.applyTo(node)
+        this.applyTo(configs, node)
 
         def os = new FileOutputStream(file)
         try {
@@ -127,7 +126,7 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
         }
     }
 
-    private void applyTo(Node node) {
+    private void applyTo(List<RunConfiguration> configs, Node node) {
         // Get the run manager node, this will contain the configuration
         node = node.component.find { it.@name == 'RunManager' }
         // Find the default app node
@@ -169,7 +168,7 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
                                 break
                             case 'WORKING_DIRECTORY':
                                 if (config.workingDirectory != null) {
-                                    String dir = config.workingDirectory as String;
+                                    String dir = config.workingDirectory as String
                                     if (Paths.get(dir).absolute) {
                                         it.@value = 'file://' + dir;
                                     } else {

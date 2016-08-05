@@ -32,27 +32,21 @@ import java.nio.file.Paths
 
 abstract class GenIDERunConfigsTaskBase extends DefaultTask {
 
-    GenIDERunConfigsTaskBase(String baseName) {
-        def createWorkingDirsTask = project.task("create${baseName}WorkingDirsTask") {
-            configs.each {
-                if (it.workingDirectory != null) {
-                    def path = Paths.get(it.workingDirectory as String)
-                    if (!Files.exists(path)) {
-                        Files.createDirectories(path)
-                    }
+    @TaskAction
+    void doTask() {
+        def configs = this.configs
+        configs.each {
+            if (it.workingDirectory != null) {
+                def path = Paths.get(it.workingDirectory as String)
+                if (!Files.exists(path)) {
+                    Files.createDirectories(path)
                 }
             }
         }
-
-        dependsOn createWorkingDirsTask
+        doTask0(configs)
     }
 
-    @TaskAction
-    void doTask() {
-        doTask0()
-    }
-
-    abstract void doTask0()
+    abstract void doTask0(List<RunConfiguration> configs)
 
     abstract List<RunConfiguration> getConfigs()
 }

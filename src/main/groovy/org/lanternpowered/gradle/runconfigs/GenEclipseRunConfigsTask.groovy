@@ -27,11 +27,9 @@ package org.lanternpowered.gradle.runconfigs
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.plugins.ide.eclipse.model.EclipseModel
 
-public class GenEclipseRunConfigsTask extends GenIDERunConfigsTaskBase {
+import java.nio.file.Paths
 
-    GenEclipseRunConfigsTask() {
-        super("Eclipse")
-    }
+public class GenEclipseRunConfigsTask extends GenIDERunConfigsTaskBase {
 
     @Override
     List<RunConfiguration> getConfigs() {
@@ -44,9 +42,54 @@ public class GenEclipseRunConfigsTask extends GenIDERunConfigsTaskBase {
     }
 
     @Override
-    void doTask0() {
+    void doTask0(List<RunConfiguration> configs) {
         def eclipseModel = project.getExtensions().getByName("eclipse") as EclipseModel
 
-        // TODO: How does this work???
+        configs.each {
+            def node = new Node(null, 'launchConfiguration',
+                    [type: 'org.eclipse.jdt.launching.localJavaApplication'])
+            node.append(new Node(node, 'stringAttribute',
+                    [key: 'org.eclipse.jdt.launching.MAIN_TYPE', value: it.mainClass]))
+            node.append(new Node(node, 'stringAttribute',
+                    [key: 'org.eclipse.jdt.launching.PROJECT_ATTR', value: eclipseModel.project.name]))
+            def baseDir = it.workingDirectory as String
+            def dir = baseDir;
+            def rel;
+            if (baseDir == null || baseDir.isEmpty() || (rel = !Paths.get(baseDir).absolute)) {
+                dir = '${workspace_loc:' + eclipseModel.project.name + '}'
+                if (rel) {
+                    dir += '/' + baseDir
+                }
+            }
+            node.append(new Node(node, 'stringAttribute',
+                    [key: 'org.eclipse.jdt.launching.WORKING_DIRECTORY', value: dir]))
+            def arguments = it.programArguments
+            if (arguments != null && !arguments.isEmpty()) {
+                node.append(new Node(node, 'stringAttribute',
+                        [key: 'org.eclipse.jdt.launching.PROGRAM_ARGUMENTS', value: arguments]))
+            }
+            def vmOptions = it.vmOptions
+            if (vmOptions != null && !vmOptions.isEmpty()) {
+                node.append(new Node(node, 'stringAttribute',
+                        [key: 'org.eclipse.jdt.launching.VM_ARGUMENTS', value: vmOptions]))
+            }
+            def envVars = it.environmentVariables
+            if (envVars != null && !envVars.isEmpty()) {
+                def envVarsNode = new Node(node, 'mapAttribute', [key: 'org.eclipse.debug.core.environmentVariables'])
+                envVars.each { key, value ->
+                    envVarsNode.append(new Node(envVarsNode, 'mapEntry', [key: key, value: value]))
+                }
+                node.append(envVarsNode)
+            }
+
+            def os = new FileOutputStream(new File("${it.name}.launch"))
+            try {
+                def printer = new XmlNodePrinter(new PrintWriter(new BufferedWriter(new OutputStreamWriter(os))))
+                printer.print(node)
+            } finally {
+                os.flush()
+                os.close()
+            }
+        }
     }
 }

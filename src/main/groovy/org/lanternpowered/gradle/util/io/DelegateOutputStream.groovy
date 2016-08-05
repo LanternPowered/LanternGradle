@@ -25,40 +25,41 @@
 package org.lanternpowered.gradle.util.io
 
 import static java.util.Objects.requireNonNull
+
 /**
  * A output stream that delegates all it's method
  * to the output stream passed in the constructor.
  */
 public class DelegateOutputStream extends OutputStream {
 
-    private final OutputStream outputStream;
+    private final OutputStream outputStream
 
     public DelegateOutputStream(OutputStream outputStream) {
-        this.outputStream = requireNonNull(outputStream, "outputStream");
+        this.outputStream = requireNonNull(outputStream, "outputStream")
     }
 
     @Override
     public void write(int b) throws IOException {
-        this.outputStream.write(b);
+        this.outputStream.write(b)
     }
 
     @Override
     public void write(byte[] b) throws IOException {
-        this.outputStream.write(b);
+        this.outputStream.write(b)
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        this.outputStream.write(b, off, len);
+        this.outputStream.write(b, off, len)
     }
 
     @Override
     public void flush() throws IOException {
-        this.outputStream.flush();
+        this.outputStream.flush()
     }
 
     @Override
     public void close() throws IOException {
-        this.outputStream.close();
+        this.outputStream.close()
     }
 }
