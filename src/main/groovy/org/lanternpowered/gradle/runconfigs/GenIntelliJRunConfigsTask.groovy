@@ -84,7 +84,8 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
             // Search for .iws file
             if (!workspaceFile.exists()) {
                 def parent = new File('')
-                def files = parent.listFiles({ parent == it.parentFile && it.name.endsWith(".iws") } as FilenameFilter)
+                FilenameFilter filter = { parent == it.parentFile && it.name.endsWith(".iws") } as FilenameFilter
+                def files = parent.listFiles(filter)
                 if (files.length != 0) {
                     workspaceFile = files[0]
                 }
@@ -182,7 +183,7 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
                     } else if (it.name() == 'envs') {
                         def envsNode = it as Node
                         config.environmentVariables.each { key, value ->
-                            envsNode.append(new Node(envsNode, 'env', [name: key, value: value]))
+                            envsNode.append(new Node(null, 'env', [name: key, value: value]))
                         }
                     }
                 }
