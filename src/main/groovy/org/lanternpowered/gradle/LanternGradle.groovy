@@ -26,17 +26,21 @@ package org.lanternpowered.gradle
 
 class LanternGradle {
 
-    public static String resolve(Object o) {
+    public static <T> T resolve(Object o, Class<T> type) {
         if (o == null) {
             return null
         }
-        if (o instanceof String) {
-            return o
+        if (type.isInstance(o)) {
+            return type.cast(o)
         }
         if (o instanceof Closure) {
-            return resolve(o.call())
+            return resolve(o.call(), type)
         }
-        return o as String
+        return type as T
+    }
+
+    public static String resolve(Object o) {
+        return resolve(o, String.class)
     }
 
     private LanternGradle() {

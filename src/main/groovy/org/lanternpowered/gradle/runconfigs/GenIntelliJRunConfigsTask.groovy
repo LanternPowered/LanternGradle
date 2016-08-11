@@ -83,9 +83,7 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
 
             // Search for .iws file
             if (!workspaceFile.exists()) {
-                def parent = new File('')
-                FilenameFilter filter = { parent == it.parentFile && it.name.endsWith(".iws") } as FilenameFilter
-                def files = parent.listFiles(filter)
+                def files = file.parentFile.listFiles({ dir, name -> file.parentFile == dir && name.endsWith(".iws") } as FilenameFilter)
                 if (files.length != 0) {
                     workspaceFile = files[0]
                 }
@@ -146,6 +144,13 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
             // Find the custom app node
             def customNode = node.find { it.@type == 'Application' && it.@name == appName }
 
+            def sourceSet;
+            if (it.targetSourceSet != null) {
+                sourceSet = it.targetSourceSet.name;
+            } else {
+                sourceSet = 'main'
+            }
+
             // Only create a new configuration if the old one is missing
             if (customNode == null) {
                 customNode = defaultNode.clone()
@@ -179,7 +184,7 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
                                 break
                         }
                     } else if (it.name() == 'module') {
-                        it.@name = project.name
+                        it.@name = "${project.name}_${sourceSet}"
                     } else if (it.name() == 'envs') {
                         def envsNode = it as Node
                         config.environmentVariables.each { key, value ->

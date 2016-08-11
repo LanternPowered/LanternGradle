@@ -26,6 +26,7 @@ package org.lanternpowered.gradle.runconfigs
 
 import groovy.transform.ToString
 import org.gradle.api.Nullable
+import org.gradle.api.tasks.SourceSet
 import org.lanternpowered.gradle.LanternGradle
 
 @ToString(includePackage = false, includeNames = true, ignoreNulls = true)
@@ -43,6 +44,9 @@ class RunConfiguration {
 
     @Nullable
     Object workingDirectory
+
+    @Nullable
+    Object targetSourceSet;
 
     Map<String, String> environmentVariables = new HashMap<>()
 
@@ -75,5 +79,10 @@ class RunConfiguration {
     @Nullable
     public String getWorkingDirectory() {
         return LanternGradle.resolve(this.workingDirectory)
+    }
+
+    @Nullable
+    public SourceSet getTargetSourceSet() {
+        return LanternGradle.resolve(this.targetSourceSet, SourceSet.class)
     }
 }
