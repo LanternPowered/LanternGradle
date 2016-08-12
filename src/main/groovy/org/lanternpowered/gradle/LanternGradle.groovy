@@ -39,10 +39,6 @@ class LanternGradle {
         return type as T
     }
 
-    public static String resolve(Object o) {
-        return resolve(o, String.class)
-    }
-
     private LanternGradle() {
     }
 }

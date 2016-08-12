@@ -63,22 +63,22 @@ class RunConfiguration {
     }
 
     public String getMainClass() {
-        return LanternGradle.resolve(this.mainClass)
+        return LanternGradle.resolve(this.mainClass, String.class)
     }
 
     @Nullable
     public String getVmOptions() {
-        return LanternGradle.resolve(this.vmOptions)
+        return LanternGradle.resolve(this.vmOptions, String.class)
     }
 
     @Nullable
     public String getProgramArguments() {
-        return LanternGradle.resolve(this.programArguments)
+        return LanternGradle.resolve(this.programArguments, String.class)
     }
 
     @Nullable
     public String getWorkingDirectory() {
-        return LanternGradle.resolve(this.workingDirectory)
+        return LanternGradle.resolve(this.workingDirectory, String.class)
     }
 
     @Nullable

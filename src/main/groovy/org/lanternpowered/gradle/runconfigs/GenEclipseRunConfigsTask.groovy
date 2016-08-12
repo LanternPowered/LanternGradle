@@ -80,7 +80,8 @@ public class GenEclipseRunConfigsTask extends GenIDERunConfigsTaskBase {
             }
             def envVars = it.environmentVariables
             if (envVars != null && !envVars.isEmpty()) {
-                def envVarsNode = new Node(null, 'mapAttribute', [key: 'org.eclipse.debug.core.environmentVariables'])
+                def envVarsNode = new Node(null, 'mapAttribute',
+                        [key: 'org.eclipse.debug.core.environmentVariables'])
                 envVars.each { key, value ->
                     envVarsNode.append(new Node(null, 'mapEntry', [key: key, value: value]))
                 }

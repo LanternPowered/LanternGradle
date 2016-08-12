@@ -128,21 +128,21 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
     private void applyTo(List<RunConfiguration> configs, Node node) {
         // Get the run manager node, this will contain the configuration
         node = node.component.find { it.@name == 'RunManager' }
-        // Find the default app node
-        def defaultNode = node.find { it.@type == 'Application' && it.@default == 'true' }
 
         // It should always be present
-        if (defaultNode == null) {
-            throw new IllegalStateException('Unable to find the default application config node,' +
+        if (node == null) {
+            throw new IllegalStateException('Unable to find the RunManager node,' +
                     ' please try to regenerate the intellij project files to resolve this issue.')
         }
 
         configs.each {
-            def config = it
-            def appName = config.name
+            def appName = it.name
 
             // Find the custom app node
-            def customNode = node.find { it.@type == 'Application' && it.@name == appName }
+            Node customNode = (Node) node.find { it.@type == 'Application' && it.@name == appName }
+            if (customNode != null) {
+                node.remove(customNode)
+            }
 
             def sourceSet;
             if (it.targetSourceSet != null) {
@@ -151,49 +151,48 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
                 sourceSet = 'main'
             }
 
-            // Only create a new configuration if the old one is missing
-            if (customNode == null) {
-                customNode = defaultNode.clone()
-                customNode.@default = 'false'
-                customNode.@name = appName
-                customNode.each {
-                    if (it.name() == 'option' && it.@name != null) {
-                        switch (it.@name) {
-                            case 'MAIN_CLASS_NAME':
-                                it.@value = config.mainClass
-                                break
-                            case 'VM_PARAMETERS':
-                                if (config.vmOptions != null) {
-                                    it.@value = config.vmOptions
-                                }
-                                break
-                            case 'PROGRAM_PARAMETERS':
-                                if (config.programArguments != null) {
-                                    it.@value = config.programArguments
-                                }
-                                break
-                            case 'WORKING_DIRECTORY':
-                                if (config.workingDirectory != null) {
-                                    String dir = config.workingDirectory as String
-                                    if (Paths.get(dir).absolute) {
-                                        it.@value = 'file://' + dir;
-                                    } else {
-                                        it.@value = 'file://$PROJECT_DIR$/' + dir
-                                    }
-                                }
-                                break
-                        }
-                    } else if (it.name() == 'module') {
-                        it.@name = "${project.name}_${sourceSet}"
-                    } else if (it.name() == 'envs') {
-                        def envsNode = it as Node
-                        config.environmentVariables.each { key, value ->
-                            envsNode.append(new Node(null, 'env', [name: key, value: value]))
-                        }
-                    }
+            customNode = new Node(null, 'configuration',
+                    [default: 'false', name: appName, type: 'Application', factoryName: 'Application'])
+            customNode.append(new Node(null, 'extension',
+                    [name: 'coverage', enabled: 'false', merge: 'false', sample_coverage: 'true', runner: 'idea']))
+            customNode.append(new Node(null, 'option',
+                    [name: 'MAIN_CLASS_NAME', value: it.mainClass]))
+            customNode.append(new Node(null, 'option',
+                    [name: 'VM_PARAMETERS', value: it.vmOptions ?: '']))
+            customNode.append(new Node(null, 'option',
+                    [name: 'PROGRAM_PARAMETERS', value: it.programArguments ?: '']))
+            def baseDir = it.workingDirectory as String
+            def dir = baseDir;
+            def rel;
+            if (baseDir == null || baseDir.isEmpty() || (rel = !Paths.get(baseDir).absolute)) {
+                dir = '$PROJECT_DIR$'
+                if (rel) {
+                    dir += '/' + baseDir
                 }
-                node.append customNode
             }
+            dir = 'file://' + dir;
+            customNode.append(new Node(null, 'option',
+                    [name: 'WORKING_DIRECTORY', value: dir]))
+            customNode.append(new Node(null, 'option',
+                    [name: 'ALTERNATIVE_JRE_PATH_ENABLED', value: 'false']))
+            customNode.append(new Node(null, 'option',
+                    [name: 'ALTERNATIVE_JRE_PATH']))
+            customNode.append(new Node(null, 'option',
+                    [name: 'ENABLE_SWING_INSPECTOR', value: 'false']))
+            customNode.append(new Node(null, 'option',
+                    [name: 'ENV_VARIABLES']))
+            customNode.append(new Node(null, 'option',
+                    [name: 'PASS_PARENT_ENVS', value: 'true']))
+            customNode.append(new Node(null, 'module',
+                    [name: "${project.name}_${sourceSet}"]))
+            Node envsNode = new Node(null, 'envs')
+            it.environmentVariables.each { key, value ->
+                envsNode.append(new Node(null, 'env', [name: key, value: value]))
+            }
+            customNode.append(envsNode)
+            customNode.append(new Node(null, 'method'))
+
+            node.append(customNode)
         }
     }
 }
