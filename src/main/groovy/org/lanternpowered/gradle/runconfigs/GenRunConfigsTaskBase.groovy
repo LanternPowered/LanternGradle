@@ -30,7 +30,7 @@ import org.gradle.api.tasks.TaskAction
 import java.nio.file.Files
 import java.nio.file.Paths
 
-abstract class GenIDERunConfigsTaskBase extends DefaultTask {
+abstract class GenRunConfigsTaskBase extends DefaultTask {
 
     @TaskAction
     void doTask() {

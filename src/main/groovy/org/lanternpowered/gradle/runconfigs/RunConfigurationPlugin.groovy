@@ -30,6 +30,9 @@ import org.gradle.api.Project
 
 class RunConfigurationPlugin implements Plugin<Project> {
 
+    static final String TASK_BASE_NAME = 'genRunConfigurations'
+    static final String TASK_IDEA_NAME = 'genIntelliJRunConfigurations'
+
     static final String EXTENSION_BASE_NAME = 'runConfigurations'
     static final String EXTENSION_IDEA_NAME = 'ideaRunConfigurations'
     static final String EXTENSION_ECLIPSE_NAME = 'eclipseRunConfigurations'
@@ -37,18 +40,17 @@ class RunConfigurationPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         project.with {
-            def factory = { name -> return new RunConfiguration(name) }
+            def factory = { name -> return new RunConfiguration(name as String) }
             extensions.add(EXTENSION_BASE_NAME, project.container(RunConfiguration, factory))
             extensions.add(EXTENSION_IDEA_NAME, project.container(RunConfiguration, factory))
             extensions.add(EXTENSION_ECLIPSE_NAME, project.container(RunConfiguration, factory))
 
-            def mainTask = project.tasks.create('genRunConfigurations', DefaultTask.class) {
+            def mainTask = project.tasks.create(TASK_BASE_NAME, DefaultTask.class) {
                 group = 'Lantern'
                 description = 'Generates run configurations for IntelliJ and Eclipse.'
             }
-
             if (project.plugins.hasPlugin('idea')) {
-                def ideaTask = project.tasks.create('genIdeaRunConfigurations', GenIntelliJRunConfigsTask.class) {
+                def ideaTask = project.tasks.create(TASK_IDEA_NAME, GenIntelliJRunConfigsTask.class) {
                     group = 'Lantern'
                     description = 'Generates run configurations for IntelliJ.'
                 }

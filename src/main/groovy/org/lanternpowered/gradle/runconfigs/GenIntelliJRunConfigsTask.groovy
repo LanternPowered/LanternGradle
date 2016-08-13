@@ -30,12 +30,17 @@ import org.gradle.plugins.ide.idea.model.IdeaModel
 
 import java.nio.file.Paths
 
-class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
+class GenIntelliJRunConfigsTask extends GenRunConfigsTaskBase {
 
     /**
      * Whether the task should be executed.
      */
-    private boolean shouldExecute = true;
+    private boolean shouldExecute = true
+
+    /**
+     * Whether to throw en exception if the project files couldn't be found
+     */
+    private boolean throwErrorOnFail = true
 
     GenIntelliJRunConfigsTask() {
         project.gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
@@ -45,8 +50,12 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
                 // We will apply the project files while the idea project generation
                 // Generate application setups
                 project.tasks.ideaWorkspace.workspace.iws.withXml { provider ->
-                    this.applyTo(provider.asNode())
+                    this.applyTo(this.configs, (Node) provider.asNode())
                 }
+            }
+            if (this.name == RunConfigurationPlugin.TASK_IDEA_NAME &&
+                    graph.hasTask(RunConfigurationPlugin.TASK_BASE_NAME)) {
+                this.throwErrorOnFail = false
             }
         }
     }
@@ -105,7 +114,12 @@ class GenIntelliJRunConfigsTask extends GenIDERunConfigsTaskBase {
         }
 
         if (!flag) {
-            throw new IllegalStateException('The idea project files must be generated before this task can be run.')
+            if (this.throwErrorOnFail) {
+                throw new IllegalStateException('The idea project files must be generated before this task can be run.')
+            } else {
+                println 'The IntelliJ project files must be generated before you generate run configs for it. ' +
+                        '(Ignore this if you aren\'t going to use IntelliJ.)'
+            }
         }
     }
 

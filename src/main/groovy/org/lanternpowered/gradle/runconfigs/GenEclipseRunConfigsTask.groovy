@@ -29,7 +29,7 @@ import org.gradle.plugins.ide.eclipse.model.EclipseModel
 
 import java.nio.file.Paths
 
-public class GenEclipseRunConfigsTask extends GenIDERunConfigsTaskBase {
+public class GenEclipseRunConfigsTask extends GenRunConfigsTaskBase {
 
     @Override
     List<RunConfiguration> getConfigs() {
