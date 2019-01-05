@@ -1,21 +1,10 @@
-buildscript {
-    repositories {
-        jcenter()
-        maven {
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
-    }
-    dependencies {
-        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.4.0'
-    }
-}
-
 plugins {
     id 'java-gradle-plugin'
     id 'groovy'
     id 'eclipse'
     id 'idea'
     id "com.github.hierynomus.license" version "0.13.1"
+    id "com.jfrog.bintray" version "1.7.3"
 }
 
 // Environment variables for the build set by the build server
@@ -37,7 +26,7 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 group = 'org.lanternpowered'
-version = '1.0.1-SNAPSHOT'
+version = '1.0.1'
 archivesBaseName = project.name.toLowerCase()
 
 repositories {
@@ -64,47 +53,12 @@ processResources {
     from 'LICENSE.txt'
 }
 
-if (artifactory_contextUrl && artifactory_username && artifactory_password) {
-    apply plugin: 'maven-publish'
-    apply plugin: 'com.jfrog.artifactory'
-
-    publishing {
-        publications {
-            thePublication(MavenPublication) {
-                artifact jar
-                artifactId archivesBaseName
-            }
-        }
-    }
-
-    artifactory {
-        contextUrl = "${artifactory_contextUrl}"
-        publish {
-            repository {
-                repoKey = project.version.contains("SNAPSHOT") ? 'libs-snapshot-local' : 'libs-release-local'
-                username = "${artifactory_username}"
-                password = "${artifactory_password}"
-                maven = true
-            }
-            defaults {
-                publications('thePublication')
-                publishArtifacts = true
-            }
-        }
-
-        resolve {
-            repository {
-                repoKey = 'repo'
-                username = "${artifactory_username}"
-                password = "${artifactory_password}"
-                maven = true
-            }
-        }
-    }
-    clientConfig.setIncludeEnvVars(true)
-    clientConfig.info.setBuildNumber(buildNumber)
-    if (ciSystem) clientConfig.info.addEnvironmentProperty('ci-system', ciSystem)
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+    from 'LICENSE.txt'
+    from sourceSets.main.allSource
 }
+assemble.dependsOn sourceJar
 
 license {
     header project.file('HEADER.txt')
@@ -129,4 +83,41 @@ license {
 // Gradle version used for generating the Gradle wrapper
 task wrapper(type: Wrapper) {
     gradleVersion = '2.14.1'
+}
+
+if (project.hasProperty('bintrayUser') && project.hasProperty('bintrayKey') &&
+        !version.endsWith("-SNAPSHOT")) {
+    apply plugin: 'maven-publish'
+
+    bintray {
+        user = project.bintrayUser
+        key = project.bintrayKey
+
+        pkg {
+            repo = 'maven'
+            name = 'lanterngradle'
+            userOrg = 'lanternpowered'
+            licenses = [ 'MIT' ]
+            vcsUrl = 'https://github.com/LanternPowered/LanternGradle.git'
+            version {
+                name = project.version
+                released  = new Date()
+                vcsTag = project.version
+            }
+        }
+
+        publications = [ 'myPublication' ]
+    }
+
+    publishing {
+        publications {
+            myPublication(MavenPublication) {
+                groupId project.group
+                artifactId project.archivesBaseName
+                version project.version
+                artifact jar
+                artifact sourceJar
+            }
+        }
+    }
 }
