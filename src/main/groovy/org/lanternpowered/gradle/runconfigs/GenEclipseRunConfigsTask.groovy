@@ -58,8 +58,8 @@ public class GenEclipseRunConfigsTask extends GenRunConfigsTaskBase {
                     [value: '/' + eclipseModel.project.name]))
             node.append(mappedResourcePathsNode)
             def baseDir = it.workingDirectory as String
-            def dir = baseDir;
-            def rel;
+            def dir = baseDir
+            def rel
             if (baseDir == null || baseDir.isEmpty() || (rel = !Paths.get(baseDir).absolute)) {
                 dir = '${workspace_loc:' + eclipseModel.project.name + '}'
                 if (rel) {
