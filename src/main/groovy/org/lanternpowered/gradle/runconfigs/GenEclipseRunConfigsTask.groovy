@@ -27,12 +27,10 @@ package org.lanternpowered.gradle.runconfigs
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.plugins.ide.eclipse.model.EclipseModel
 
-import java.nio.file.Paths
-
-public class GenEclipseRunConfigsTask extends GenRunConfigsTaskBase {
+class GenEclipseRunConfigsTask extends GenRunConfigsTaskBase {
 
     @Override
-    List<RunConfiguration> getConfigs() {
+    protected List<RunConfiguration> getConfigs() {
         List<RunConfiguration> configurations = []
         configurations.addAll((project.extensions.getByName(RunConfigurationPlugin.EXTENSION_BASE_NAME)
                 as NamedDomainObjectContainer).asMap.values())
@@ -42,8 +40,8 @@ public class GenEclipseRunConfigsTask extends GenRunConfigsTaskBase {
     }
 
     @Override
-    void doTask0(List<RunConfiguration> configs) {
-        def eclipseModel = project.getExtensions().getByName("eclipse") as EclipseModel
+    protected void generateRunConfig(List<RunConfiguration> configs) {
+        def eclipseModel = project.rootProject.getExtensions().getByName("eclipse") as EclipseModel
 
         configs.each {
             def node = new Node(null, 'launchConfiguration',
@@ -57,17 +55,17 @@ public class GenEclipseRunConfigsTask extends GenRunConfigsTaskBase {
             mappedResourcePathsNode.append(new Node(null, 'listEntry',
                     [value: '/' + eclipseModel.project.name]))
             node.append(mappedResourcePathsNode)
-            def baseDir = it.workingDirectory as String
-            def dir = baseDir
-            def rel
-            if (baseDir == null || baseDir.isEmpty() || (rel = !Paths.get(baseDir).absolute)) {
-                dir = '${workspace_loc:' + eclipseModel.project.name + '}'
-                if (rel) {
-                    dir += '/' + baseDir
-                }
+            def workDirPath = getWorkDirPath(it.workingDirectory)
+            // Try to relativize against the root project dir, if possible, otherwise use the absolute path
+            def workDir
+            try {
+                workDir = workDirPath.relativize(project.rootProject.projectDir.toPath()).toFile().getPath()
+                workDir = '${workspace_loc:' + eclipseModel.project.name + '}' + (workDir.isEmpty() ? '' : '/' + workDir)
+            } catch (IllegalArgumentException ignored) {
+                workDir = workDirPath.toFile().getPath()
             }
             node.append(new Node(null, 'stringAttribute',
-                    [key: 'org.eclipse.jdt.launching.WORKING_DIRECTORY', value: dir]))
+                    [key: 'org.eclipse.jdt.launching.WORKING_DIRECTORY', value: workDir]))
             def arguments = it.programArguments
             if (arguments != null && !arguments.isEmpty()) {
                 node.append(new Node(null, 'stringAttribute',

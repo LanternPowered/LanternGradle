@@ -29,6 +29,9 @@ import org.gradle.api.Nullable
 import org.gradle.api.tasks.SourceSet
 import org.lanternpowered.gradle.LanternGradle
 
+import java.nio.file.Path
+import java.nio.file.Paths
+
 @ToString(includePackage = false, includeNames = true, ignoreNulls = true)
 class RunConfiguration {
 
@@ -46,43 +49,54 @@ class RunConfiguration {
     Object workingDirectory
 
     @Nullable
-    Object targetSourceSet;
+    Object targetSourceSet
 
     Map<String, String> environmentVariables = new HashMap<>()
 
-    public RunConfiguration(String name) {
-        this.name = name;
+    RunConfiguration(String name) {
+        this.name = name
     }
 
-    public Map<String, String> getEnvironmentVariables() {
-        return this.environmentVariables;
+    Map<String, String> getEnvironmentVariables() {
+        return this.environmentVariables
     }
 
-    public String getName() {
-        return this.name;
+    String getName() {
+        return this.name
     }
 
-    public String getMainClass() {
+    String getMainClass() {
         return LanternGradle.resolve(this.mainClass, String.class)
     }
 
     @Nullable
-    public String getVmOptions() {
+    String getVmOptions() {
         return LanternGradle.resolve(this.vmOptions, String.class)
     }
 
     @Nullable
-    public String getProgramArguments() {
+    String getProgramArguments() {
         return LanternGradle.resolve(this.programArguments, String.class)
     }
 
     @Nullable
-    public String getWorkingDirectory() {
-        return LanternGradle.resolve(this.workingDirectory, String.class)
+    Path getWorkingDirectory() {
+        def workDir = LanternGradle.resolve(this.workingDirectory, Object.class)
+        if (workDir instanceof Path) {
+            return workDir
+        } else if (workDir instanceof File) {
+            return workDir.toPath()
+        } else {
+            workDir = workDir as String
+            if (workDir == null) {
+                workDir = ""
+            }
+            return Paths.get(workDir)
+        }
     }
 
     @Nullable
-    public SourceSet getTargetSourceSet() {
+    SourceSet getTargetSourceSet() {
         return LanternGradle.resolve(this.targetSourceSet, SourceSet.class)
     }
 }

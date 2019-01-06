@@ -28,8 +28,6 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.plugins.ide.idea.model.IdeaModel
 
-import java.nio.file.Paths
-
 class GenIntelliJRunConfigsTask extends GenRunConfigsTaskBase {
 
     /**
@@ -61,7 +59,7 @@ class GenIntelliJRunConfigsTask extends GenRunConfigsTaskBase {
     }
 
     @Override
-    List<RunConfiguration> getConfigs() {
+    protected List<RunConfiguration> getConfigs() {
         List<RunConfiguration> configurations = []
         configurations.addAll((project.extensions.getByName(RunConfigurationPlugin.EXTENSION_BASE_NAME)
                 as NamedDomainObjectContainer).asMap.values())
@@ -71,7 +69,7 @@ class GenIntelliJRunConfigsTask extends GenRunConfigsTaskBase {
     }
 
     @Override
-    void doTask0(List<RunConfiguration> configs) {
+    protected void generateRunConfig(List<RunConfiguration> configs) {
         def flag = false
 
         // Apply to configurations first to the project files
@@ -141,7 +139,7 @@ class GenIntelliJRunConfigsTask extends GenRunConfigsTaskBase {
 
     private void applyTo(List<RunConfiguration> configs, Node node) {
         // Get the run manager node, this will contain the configuration
-        node = node.component.find { it.@name == 'RunManager' }
+        node = node.component.find { it.@name == 'RunManager' } as Node
 
         // It should always be present
         if (node == null) {
@@ -158,7 +156,7 @@ class GenIntelliJRunConfigsTask extends GenRunConfigsTaskBase {
                 node.remove(customNode)
             }
 
-            def sourceSet;
+            def sourceSet
             if (it.targetSourceSet != null) {
                 sourceSet = it.targetSourceSet.name
             } else {
@@ -175,18 +173,18 @@ class GenIntelliJRunConfigsTask extends GenRunConfigsTaskBase {
                     [name: 'VM_PARAMETERS', value: it.vmOptions ?: '']))
             customNode.append(new Node(null, 'option',
                     [name: 'PROGRAM_PARAMETERS', value: it.programArguments ?: '']))
-            def baseDir = it.workingDirectory as String
-            def dir = baseDir
-            def rel
-            if (baseDir == null || baseDir.isEmpty() || (rel = !Paths.get(baseDir).absolute)) {
-                dir = '$PROJECT_DIR$'
-                if (rel) {
-                    dir += '/' + baseDir
-                }
+            def workDirPath = getWorkDirPath(it.workingDirectory)
+            // Try to relativize against the root project dir, if possible, otherwise use the absolute path
+            def workDir
+            try {
+                workDir = workDirPath.relativize(project.rootProject.projectDir.toPath()).toFile().getPath()
+                workDir = '$PROJECT_DIR$' + (workDir.isEmpty() ? '' : '/' + workDir)
+            } catch (IllegalArgumentException ignored) {
+                workDir = workDirPath.toFile().getPath()
             }
-            dir = 'file://' + dir;
+            workDir = 'file://' + workDir
             customNode.append(new Node(null, 'option',
-                    [name: 'WORKING_DIRECTORY', value: dir]))
+                    [name: 'WORKING_DIRECTORY', value: workDir]))
             customNode.append(new Node(null, 'option',
                     [name: 'ALTERNATIVE_JRE_PATH_ENABLED', value: 'false']))
             customNode.append(new Node(null, 'option',

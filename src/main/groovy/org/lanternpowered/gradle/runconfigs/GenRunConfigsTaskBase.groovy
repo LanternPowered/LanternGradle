@@ -28,7 +28,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
 import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.Path
 
 abstract class GenRunConfigsTaskBase extends DefaultTask {
 
@@ -37,16 +37,24 @@ abstract class GenRunConfigsTaskBase extends DefaultTask {
         def configs = this.configs
         configs.each {
             if (it.workingDirectory != null) {
-                def path = Paths.get(it.workingDirectory as String)
+                def path = getWorkDirPath(it.workingDirectory)
                 if (!Files.exists(path)) {
                     Files.createDirectories(path)
                 }
             }
         }
-        doTask0(configs)
+        generateRunConfig(configs)
     }
 
-    abstract void doTask0(List<RunConfiguration> configs)
+    protected abstract void generateRunConfig(List<RunConfiguration> configs)
 
-    abstract List<RunConfiguration> getConfigs()
+    protected abstract List<RunConfiguration> getConfigs()
+
+    protected Path getWorkDirPath(Path workDirPath) {
+        if (workDirPath.absolute) {
+            return workDirPath
+        }
+        // Resolve the path relative to the project one
+        return project.projectDir.toPath().resolve(workDirPath)
+    }
 }

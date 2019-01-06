@@ -26,7 +26,7 @@ package org.lanternpowered.gradle
 
 class LanternGradle {
 
-    public static <T> T resolve(Object o, Class<T> type) {
+    static <T> T resolve(Object o, Class<T> type) {
         if (o == null) {
             return null
         }
@@ -34,7 +34,7 @@ class LanternGradle {
             return type.cast(o)
         }
         if (o instanceof Closure) {
-            return resolve(o.call(), type)
+            return resolve(o.call(), type) as T
         }
         return type as T
     }
