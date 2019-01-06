@@ -26,7 +26,7 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 group = 'org.lanternpowered'
-version = '1.0.2-SNAPSHOT'
+version = '1.0.2'
 archivesBaseName = project.name.toLowerCase()
 
 repositories {

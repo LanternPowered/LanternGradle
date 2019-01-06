@@ -177,7 +177,7 @@ class GenIntelliJRunConfigsTask extends GenRunConfigsTaskBase {
             // Try to relativize against the root project dir, if possible, otherwise use the absolute path
             def workDir
             try {
-                workDir = workDirPath.relativize(project.rootProject.projectDir.toPath()).toFile().getPath()
+                workDir = project.rootProject.projectDir.toPath().relativize(workDirPath).toFile().getPath()
                 workDir = '$PROJECT_DIR$' + (workDir.isEmpty() ? '' : '/' + workDir)
             } catch (IllegalArgumentException ignored) {
                 workDir = workDirPath.toFile().getPath()
